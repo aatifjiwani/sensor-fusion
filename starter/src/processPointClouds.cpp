@@ -28,12 +28,26 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     auto startTime = std::chrono::steady_clock::now();
 
     // TODO:: Fill in the function to do voxel grid point reduction and region based filtering
+    typename pcl::PointCloud<PointT>::Ptr filtered_cloud (new pcl::PointCloud<PointT>);
+
+    typename pcl::VoxelGrid<PointT> filter;
+    filter.setInputCloud(cloud);
+    filter.setLeafSize(filterRes, filterRes, filterRes);
+    filter.filter(*filtered_cloud);
+
+    typename pcl::PointCloud<PointT>::Ptr region_cloud (new pcl::PointCloud<PointT>);
+
+    typename pcl::CropBox<PointT> box_filter(true);
+    box_filter.setMin(minPoint);
+    box_filter.setMax(maxPoint);
+    box_filter.setInputCloud(filtered_cloud);
+    box_filter.filter(*region_cloud);
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
 
-    return cloud;
+    return region_cloud;
 
 }
 
@@ -65,7 +79,7 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     // Time segmentation process
     auto startTime = std::chrono::steady_clock::now();
     // TODO:: Fill in this function to find inliers for the cloud.
-    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    pcl::SACSegmentation<PointT> seg;
     seg.setOptimizeCoefficients(true);
     seg.setModelType(pcl::SACMODEL_PLANE);
     seg.setMethodType(pcl::SAC_RANSAC);
