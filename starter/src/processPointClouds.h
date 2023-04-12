@@ -17,7 +17,10 @@
 #include <vector>
 #include <ctime>
 #include <chrono>
+#include <unordered_set>
+#include <cmath>
 #include "render/box.h"
+#include "kdtree.h"
 
 template<typename PointT>
 class ProcessPointClouds {
@@ -49,4 +52,5 @@ public:
     std::vector<boost::filesystem::path> streamPcd(std::string dataPath);
   
 };
+
 #endif /* PROCESSPOINTCLOUDS_H_ */
