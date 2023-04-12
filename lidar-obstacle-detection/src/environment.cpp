@@ -46,13 +46,12 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
     std::vector<PointCloudI::Ptr> cloudClusters = processor->Clustering(segmentedCloud.first, 0.53, 10, 500);
     
     int clusterId = 0;
-    std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(0,0,1)};
     for(PointCloudI::Ptr cluster : cloudClusters)
     {
         // std::cout << "cluster size ";
         // processor->numPoints(cluster);
         
-        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId % 3]);
+        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), Color(0, 1, 0));
         renderBox(viewer, processor->BoundingBox(cluster), clusterId);
         ++clusterId;
     }
@@ -135,23 +134,23 @@ int main (int argc, char** argv)
     auto streamIterator = stream.begin();
     PointCloudI::Ptr inputCloudI;
 
-    inputCloudI = processor->loadPcd((*streamIterator).string());
-    cityBlock(viewer, processor, inputCloudI);
+    // inputCloudI = processor->loadPcd((*streamIterator).string());
+    // cityBlock(viewer, processor, inputCloudI);
 
 
     while (!viewer->wasStopped ())
     {
         // Clear viewer
-        // viewer->removeAllPointClouds();
-        // viewer->removeAllShapes();
+        viewer->removeAllPointClouds();
+        viewer->removeAllShapes();
 
         // Load pcd and run obstacle detection process
-        // inputCloudI = processor->loadPcd((*streamIterator).string());
-        // cityBlock(viewer, processor, inputCloudI);
+        inputCloudI = processor->loadPcd((*streamIterator).string());
+        cityBlock(viewer, processor, inputCloudI);
 
-        // streamIterator++;
-        // if(streamIterator == stream.end())
-        // streamIterator = stream.begin();
+        streamIterator++;
+        if(streamIterator == stream.end())
+        streamIterator = stream.begin();
 
         viewer->spinOnce ();
     } 
