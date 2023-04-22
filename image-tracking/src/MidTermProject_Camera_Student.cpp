@@ -7,6 +7,7 @@
 #include <deque>
 #include <cmath>
 #include <limits>
+#include <numeric>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -42,7 +43,22 @@ int main(int argc, const char *argv[])
     bool bVis = false;            // visualize results
 
     /* MAIN LOOP OVER ALL IMAGES */
+    ofstream data_file;
+    data_file.open("data.txt", ios::out | ios::app);
 
+    // extract 2D keypoints from current image
+    string detectorType = "HARRIS";
+    if (argc > 1)
+        detectorType = argv[1];
+    data_file << detectorType << "\n";
+
+    string descriptorType = "SIFT"; // BRIEF, ORB, FREAK, AKAZE, SIFT
+    if (argc > 2)
+        descriptorType = argv[2];
+    data_file << descriptorType << "\n";
+
+    double total_time = 0;
+    double num_matches = 0;
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -67,19 +83,18 @@ int main(int argc, const char *argv[])
         frame.cameraImg = imgGray;
         dataBuffer.push_back(frame);
 
+        vector<cv::KeyPoint> keypoints; // create empty feature list for current image
+
         //// EOF STUDENT ASSIGNMENT
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
-
-        /* DETECT IMAGE KEYPOINTS */
-
-        // extract 2D keypoints from current image
-        vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SIFT";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
         //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-        bool detVis = true;
+        // Apply corner detection
+        double start = (double)cv::getTickCount();
+
+        bool detVis = false;
         if (detectorType.compare("SHITOMASI") == 0) {
             detKeypointsShiTomasi(keypoints, imgGray, detVis);
         } else if (detectorType.compare("HARRIS") == 0) {
@@ -120,6 +135,16 @@ int main(int argc, const char *argv[])
                 imshow(windowName, visImage);
                 cv::waitKey(0);
             }
+
+            cout << "Num keypoints focused " << detectorType << " " << keypoints.size() << endl;
+            // data_file << keypoints.size() << "; mean ";
+
+            auto add_square = [](double sum, cv::KeyPoint i)
+            {
+                return sum + i.size;
+            };
+            double mean = std::accumulate(keypoints.begin(), keypoints.end(), 0.0, add_square)/keypoints.size();
+            // data_file << mean << "\n";
         }
 
         //// EOF STUDENT ASSIGNMENT
@@ -149,9 +174,11 @@ int main(int argc, const char *argv[])
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
 
         cv::Mat descriptors;
-        string descriptorType = "SIFT"; // BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
+
+        double end = ((double)cv::getTickCount() - start) / cv::getTickFrequency();
+        total_time += 1000 * end / 1.0;
 
         // push descriptors for current frame to end of data buffer
         (dataBuffer.end() - 1)->descriptors = descriptors;
@@ -164,8 +191,8 @@ int main(int argc, const char *argv[])
             /* MATCH KEYPOINT DESCRIPTORS */
 
             vector<cv::DMatch> matches;
-            string matcherType = "MAT_FLANN";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_HOG"; // DES_BINARY, DES_HOG
+            string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
+            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
             string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
@@ -177,6 +204,7 @@ int main(int argc, const char *argv[])
                              matches, descriptorType, matcherType, selectorType);
 
             //// EOF STUDENT ASSIGNMENT
+            num_matches += matches.size();
 
             // store matches in current data frame
             (dataBuffer.end() - 1)->kptMatches = matches;
@@ -184,7 +212,7 @@ int main(int argc, const char *argv[])
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
             // visualize matches between current and previous image
-            bVis = true;
+            bVis = false;
             if (bVis)
             {
                 cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
@@ -204,6 +232,7 @@ int main(int argc, const char *argv[])
         }
 
     } // eof loop over all images
-
+    data_file << total_time / 10. << "ms\n" << num_matches << "\n\n";
+    data_file.close();
     return 0;
 }

@@ -1,43 +1,55 @@
-# SFND 2D Feature Tracking
+# 2D Feature Tracking
 
 <img src="images/keypoints.png" width="820" height="248" />
 
-The idea of the camera course is to build a collision detection system - that's the overall goal for the Final Project. As a preparation for this, you will now build the feature tracking part and test various detector / descriptor combinations to see which ones perform best. This mid-term project consists of four parts:
-
-* First, you will focus on loading images, setting up data structures and putting everything into a ring buffer to optimize memory load. 
-* Then, you will integrate several keypoint detectors such as HARRIS, FAST, BRISK and SIFT and compare them with regard to number of keypoints and speed. 
-* In the next part, you will then focus on descriptor extraction and matching using brute force and also the FLANN approach we discussed in the previous lesson. 
-* In the last part, once the code framework is complete, you will test the various algorithms in different combinations and compare them with regard to some performance measures. 
-
-See the classroom instruction and code comments for more details on each of these parts. Once you are finished with this project, the keypoint matching part will be set up and you can proceed to the next lesson, where the focus is on integrating Lidar points and on object detection using deep-learning. 
-
-## Dependencies for Running Locally
-1. cmake >= 2.8
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
-
-2. make >= 4.1 (Linux, Mac), 3.81 (Windows)
- * Linux: make is installed by default on most Linux distros
- * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
- * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-
-3. OpenCV >= 4.1
- * All OSes: refer to the [official instructions](https://docs.opencv.org/master/df/d65/tutorial_table_of_content_introduction.html)
- * This must be compiled from source using the `-D OPENCV_ENABLE_NONFREE=ON` cmake flag for testing the SIFT and SURF detectors. If using [homebrew](https://brew.sh/): `$> brew install --build-from-source opencv` will install required dependencies and compile opencv with the `opencv_contrib` module by default (no need to set `-DOPENCV_ENABLE_NONFREE=ON` manually). 
- * The OpenCV 4.1.0 source code can be found [here](https://github.com/opencv/opencv/tree/4.1.0)
-
-4. gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
-  * Windows: recommend using either [MinGW-w64](http://mingw-w64.org/doku.php/start) or [Microsoft's VCPKG, a C++ package manager](https://docs.microsoft.com/en-us/cpp/build/install-vcpkg?view=msvc-160&tabs=windows). VCPKG maintains its own binary distributions of OpenCV and many other packages. To see what packages are available, type `vcpkg search` at the command prompt. For example, once you've _VCPKG_ installed, you can install _OpenCV 4.1_ with the command:
-```bash
-c:\vcpkg> vcpkg install opencv4[nonfree,contrib]:x64-windows
-```
-Then, add *C:\vcpkg\installed\x64-windows\bin* and *C:\vcpkg\installed\x64-windows\debug\bin* to your user's _PATH_ variable. Also, set the _CMake Toolchain File_ to *c:\vcpkg\scripts\buildsystems\vcpkg.cmake*.
-
-
 ## Basic Build Instructions
+```bash
+mkdir build && cd build
+cmake .. && make
+./2D_feature_tracking
+```
 
-1. Clone this repo.
-2. Make a build directory in the top level directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./2D_feature_tracking`.
+## Performance Evaluations
+1. Number of Keypoints detected on preceding vehicle for each detector
+
+| Detector | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | Avg. Neighborhood |
+| :---    | :---  | :---  | :---  |  :--- | :---  | :---  | :---  | :---  | :---  | :---  | :---: |
+| SHI-TOMASI | 128 | 120 | 106 | 118 | 125 | 131 | 130 | 131 | 140 | 142 | 4 |
+| HARRIS | 50 | 54 | 53 | 55 | 56 | 58 | 57 | 61 | 59 | 57 | 4 |
+| FAST | 149 | 152 | 150 | 155 | 149 | 149 | 156 | 150 | 138 | 143 | 7 |
+| BRISK | 124 | 121 | 120 | 129 | 121 | 123 | 125 | 118 | 122 | 105 | 19 |
+| ORB | 57 | 64 | 62 | 62 | 65 | 74 | 62 | 66 | 65 | 62 | 31 |
+| AKAZE | 114 | 110 | 113 | 106 | 108 | 110 | 113 | 113 | 119 | 114 | 7 |
+| SIFT | 128 | 120 | 106 | 118 | 125 | 131 | 130 | 131 | 140 | 142 | 6 |
+
+
+2. Number of Matched Keypoints for all 10 images
+
+| Detector / Descriptor | BRISK | BRIEF | ORB | FREAK | AKAZE | SIFT |
+| ---                 | :---  | :---  |:--- |:---   |:---   |:---  |
+| SHI-TOMASI           | 767   | 944   | 907 | 766   | n/a     | 927  |
+| HARRIS              | 393   | 460   | 449 | 403   | n/a     | 459  |
+| FAST                | 899   | 1099   | 1081 | 881   | n/a     | 1046  |
+| BRISK               | 734  | 757  | 711| 774  | n/a     | 778 |
+| ORB                 | 464   | 481   | 425 | 445   | n/a     | 453  |
+| AKAZE               | 809  | 903  | 816| 801  | 812  |815  |
+| SIFT                | 612   | 721   | n/a   | 620   | n/a     |775   |
+
+3. Time it took to detect and describe keypoints, average for all 10 images. All numbers are in milliseconds. 
+
+| Detector / Descriptor | BRISK | BRIEF | ORB | FREAK | AKAZE | SIFT |
+| ---                 | :---  | :---  |:--- |:---   |:---   |:---  |
+| SHI-TOMASI           | 34.31   | 13.58   | 12.45 | 32.17   | n/a     | 25.52  |
+| HARRIS              | 34.18   | 11.40   | 11.98 | 32.28   | n/a     | 25.71  |
+| FAST                | 19.83   | 1.72   | 2.09 | 25.46   | n/a     | 16.04  |
+| BRISK               | 50.29  | 32.52  | 36.44| 58.33  | n/a     | 49.47 |
+| ORB                 | 34.89   | 16.42   | 16.37 | 40.10   | n/a     | 35.82  |
+| AKAZE               | 62.44  | 31.86  | 38.89| 57.17  | 89.73  |55.16  |
+| SIFT                | 95.18   | 71.15   | n/a   | 100.58   | n/a     |132.58   |
+
+In terms of time and number of matched keypoints, the Top 3 Detector/Descriptor pairs are:
+1. FAST/BRIEF with a runtime of 1.72 ms per image and a total of 1099 matched features
+2. FAST/ORB with a runtime of 2.09 ms per image and a total of 1081 matched features
+3. SHI-TOMASI/ORB with a runtime of 12.45 ms per image and a total of 907 matched features. 
+
+It seems based on these that the FAST detector and the ORB descriptor are generally the best. 

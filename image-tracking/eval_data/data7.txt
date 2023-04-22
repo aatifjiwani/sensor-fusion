@@ -1,0 +1,84 @@
+SIFT
+0 128; mean 5.29804
+1 120; mean 5.82104
+2 106; mean 5.71654
+3 118; mean 5.38326
+4 125; mean 5.83368
+5 131; mean 5.18971
+6 130; mean 5.6688
+7 131; mean 5.1896
+8 140; mean 5.9137
+9 142; mean 5.69781
+
+SHITOMASI
+0 125; mean 4
+1 118; mean 4
+2 123; mean 4
+3 120; mean 4
+4 120; mean 4
+5 113; mean 4
+6 114; mean 4
+7 123; mean 4
+8 111; mean 4
+9 112; mean 4
+
+HARRIS
+0 50; mean 4
+1 54; mean 4
+2 53; mean 4
+3 55; mean 4
+4 56; mean 4
+5 58; mean 4
+6 57; mean 4
+7 61; mean 4
+8 59; mean 4
+9 57; mean 4
+
+FAST
+0 149; mean 7
+1 152; mean 7
+2 150; mean 7
+3 155; mean 7
+4 149; mean 7
+5 149; mean 7
+6 156; mean 7
+7 150; mean 7
+8 138; mean 7
+9 143; mean 7
+
+BRISK
+0 124; mean 18.4703
+1 121; mean 19.2411
+2 120; mean 19.2973
+3 129; mean 19.4362
+4 121; mean 19.7553
+5 123; mean 18.6811
+6 125; mean 18.9356
+7 118; mean 18.7257
+8 122; mean 18.631
+9 105; mean 18.8668
+
+ORB
+0 57; mean 31
+1 64; mean 31
+2 62; mean 31
+3 62; mean 31
+4 65; mean 31
+5 74; mean 31
+6 62; mean 31
+7 66; mean 31
+8 65; mean 31
+9 62; mean 31
+
+AKAZE
+0 114; mean 7.37419
+1 110; mean 7.23154
+2 113; mean 7.25923
+3 106; mean 7.45915
+4 108; mean 7.7013
+5 110; mean 7.6847
+6 113; mean 7.6154
+7 113; mean 7.59479
+8 119; mean 7.61116
+9 114; mean 7.58348
+
