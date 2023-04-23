@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <deque>
 #include <cmath>
 #include <limits>
 #include <opencv2/core.hpp>
@@ -71,8 +72,16 @@ int main(int argc, const char *argv[])
     // misc
     double sensorFrameRate = 10.0 / imgStepWidth; // frames per second for Lidar and camera
     int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
-    vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
+    deque<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
     bool bVis = true;            // visualize results
+
+    string detectorType = "HARRIS";
+    if (argc > 1)
+        detectorType = argv[1];
+
+    string descriptorType = "SIFT"; // BRIEF, ORB, FREAK, AKAZE, SIFT
+    if (argc > 2)
+        descriptorType = argv[2];
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -87,6 +96,9 @@ int main(int argc, const char *argv[])
 
         // load image from file 
         cv::Mat img = cv::imread(imgFullFilename);
+
+        if (dataBuffer.size() > 1)
+            dataBuffer.pop_front();
 
         // push image into data frame buffer
         DataFrame frame;
@@ -148,13 +160,21 @@ int main(int argc, const char *argv[])
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
         string detectorType = "SHITOMASI";
 
-        if (detectorType.compare("SHITOMASI") == 0)
-        {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
-        }
-        else
-        {
-            //...
+        bool detVis = false;
+        if (detectorType.compare("SHITOMASI") == 0) {
+            detKeypointsShiTomasi(keypoints, imgGray, detVis);
+        } else if (detectorType.compare("HARRIS") == 0) {
+            detKeypointsHarris(keypoints, imgGray, detVis);
+        } else if (detectorType.compare("FAST") == 0) {
+            detKeypointsFast(keypoints, imgGray, detVis);
+        } else if (detectorType.compare("BRISK") == 0) {
+            detKeypointsBrisk(keypoints, imgGray, detVis);
+        } else if (detectorType.compare("SIFT") == 0) {
+            detKeypointsSift(keypoints, imgGray, detVis);
+        } else if (detectorType.compare("ORB") == 0) {
+            detKeypointsOrb(keypoints, imgGray, detVis);
+        } else if (detectorType.compare("AKAZE") == 0) {
+            detKeypointsAkaze(keypoints, imgGray, detVis);
         }
 
         // optional : limit number of keypoints (helpful for debugging and learning)
