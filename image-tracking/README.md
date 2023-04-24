@@ -9,6 +9,33 @@ cmake .. && make
 ./2D_feature_tracking
 ```
 
+## Implementation Overview
+
+### Data Buffer Optimization
+In order to build a data buffer that does not exceed a limit _and_ does not incur a large cost, we resorted to using the C++ STL `deque`. 
+A `deque` is essentially a two-sided vector that allows us to insert and remove from either end of the list with constant runtime. 
+When adding new elements to the buffer, add on the right/back. When the buffer is at the size limit, remove from the left/front. 
+
+### Keypoint Detection
+In `matching2D_Student.cpp`, we implemented the following Keypoint detectors using OpenCV: HARRIS, FAST, BRISK, ORB, AKAZE, and SIFT. 
+All the detectors can be used using their respective API: `detKeypoints<TYPE>`. 
+
+#### Keypoint Filtering
+In order to focus only on the preceding vehicle, we filter the keypoints produced by the above OpenCV `FeatureDetector`s. All we need to do
+is check if each keypoint is contained within a bounding box over the preceding vehicle, and only keep the ones that are. 
+
+### Describing Keypoints
+In `matching2D_Student.cpp`, we implement an API `descKeypoints` that uses OpenCV to use the following feature descriptors: BRIEF, ORB, FREAK, AKAZE, and SIFT. 
+All descriptors can be used by specifying the `descriptorType` argument. 
+
+### Descriptor Matching
+Once we have keypoints and their descriptions for every frame, we need to match the keypoints between each pair of sequential frames. To do this, we use OpenCV's 
+implementation of Brute-Force matching and FLANN, a fast approximation of nearest neighbors. We implement these matchers in `matchDescriptors`
+
+#### Descriptor Distance Ratio
+In order to find the best matches and keypoints that aren't worth using, we can use K-nearest neighbors and perform a distance ratio test. For K=2, if the ratio 
+of the distances between the best and second-best match is within a threshold, then keep it. 
+
 ## Performance Evaluations
 1. Number of Keypoints detected on preceding vehicle for each detector
 
