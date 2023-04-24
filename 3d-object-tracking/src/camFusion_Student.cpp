@@ -243,6 +243,8 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     double minx_prev = lidarPointsPrev[lidarPointsPrev.size() / 2].x;
     double minx_curr = lidarPointsCurr[lidarPointsCurr.size() / 2].x;
 
+    cout << "min x prev: " << minx_prev << "; min x curr: " << minx_curr << "\n";
+
     double dt = 1/frameRate;
     TTC = (minx_curr * dt) / (minx_prev - minx_curr);
 }
