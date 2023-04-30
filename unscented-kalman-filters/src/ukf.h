@@ -41,6 +41,8 @@ class UKF {
    */
   void UpdateRadar(MeasurementPackage meas_package);
 
+  void Update(int n_z, Eigen::VectorXd& z, Eigen::MatrixXd& Z_sig, Eigen::MatrixXd& R, int normalize_angle = -1);
+
 
   // initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
