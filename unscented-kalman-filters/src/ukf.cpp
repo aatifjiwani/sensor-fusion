@@ -1,5 +1,6 @@
 #include "ukf.h"
 #include "Eigen/Dense"
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -12,10 +13,10 @@ UKF::UKF() {
   use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = false;
+  use_radar_ = true;
 
   // initial state vector
-  x_ = VectorXd(5);
+  x_ = VectorXd(5).setZero();
 
   // initial covariance matrix
   P_ = MatrixXd::Identity(5, 5);
@@ -54,20 +55,22 @@ UKF::UKF() {
    * TODO: Complete the initialization. See ukf.h for other member properties.
    * Hint: one or more values initialized above might be wildly off...
    */
-  std_a_ = 6.0;
-  std_yawdd_ = 1.0;
+  is_initialized_ = false;
+
+  std_a_ = 1;
+  std_yawdd_ = 1;
 
   n_x_ = 5;
   n_aug_ = 7;
   lambda_ = 3 - n_aug_;
 
   weights_ = VectorXd(2*n_aug_ + 1);
+  weights_.fill(0.5 / (n_aug_ + lambda_));
   weights_(0) = lambda_ / (lambda_ + n_aug_);
-  for (int i = 1; i < 2 * n_aug_ + 1; i++) {
-    weights_(i) = 0.5 / (n_aug_ + lambda_);
-  }
 
-  Xsig_pred_ = MatrixXd::Zero(n_x_, 2 * n_aug_ + 1);
+  Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1).setZero();
+
+  time_us_ = 0;
 }
 
 UKF::~UKF() {}
@@ -81,35 +84,44 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     is_initialized_ = true; 
 
     // initialize state and process noise matrix
-    x_.fill(0.0);
     if (meas_package.sensor_type_ == meas_package.LASER) {
       x_(0) = meas_package.raw_measurements_[0];
       x_(1) = meas_package.raw_measurements_[1];
       
       P_(0, 0) = std_laspx_ * std_laspx_;
       P_(1, 1) = std_laspy_ * std_laspy_;
-
+      std::cout << P_ << std::endl;
+      std::cout << x_ << std::endl;
     } else if (meas_package.sensor_type_ == meas_package.RADAR) {
+      // distance, heading, distance_dt
+
       x_(0) = meas_package.raw_measurements_[0] * cos(meas_package.raw_measurements_[1]);
       x_(1) = meas_package.raw_measurements_[0] * sin(meas_package.raw_measurements_[1]);
 
-      P_(0, 0) = P_(1, 1) = std_radr_ * std_radr_;
+      double v_x = meas_package.raw_measurements_[2] * cos(meas_package.raw_measurements_[1]);
+      double v_y = meas_package.raw_measurements_[2] * cos(meas_package.raw_measurements_[1]);
+      x_(2) = sqrt(v_x*v_x + v_y * v_y);
+      x_(3) = meas_package.raw_measurements_[1];
+
+      P_(0, 0) = std_radr_ * std_radr_;
+      P_(1, 1) = std_radr_ * std_radr_;
       P_(2, 2) = std_radrd_ * std_radrd_;
-      P_(3, 3) = P_(4, 4) = std_radphi_ * std_radphi_;
+      P_(3, 3) = std_radphi_ * std_radphi_;
+      P_(4, 4) = std_radphi_ * std_radphi_;
+      std::cout << P_ << std::endl;
     }
-  } else {
-    // perform a prediction step
-    double dt = (meas_package.timestamp_ - time_us_) / 1000000;
-    Prediction(dt);
+    time_us_ = meas_package.timestamp_;
+    return;
   }
 
+  // perform a prediction step
+  double dt = (meas_package.timestamp_ - time_us_) / 1e6;
   time_us_ = meas_package.timestamp_;
+  Prediction(dt);
 
-  if (use_laser_ && meas_package.sensor_type_ == meas_package.LASER) {
+  if (use_laser_ && meas_package.sensor_type_ == MeasurementPackage::LASER) {
     UpdateLidar(meas_package);
-  }
-    
-  if (use_radar_ && meas_package.sensor_type_ == meas_package.RADAR) {
+  } else if (use_radar_ && meas_package.sensor_type_ == MeasurementPackage::RADAR) {
     UpdateRadar(meas_package);
   }
 }
@@ -122,9 +134,9 @@ void UKF::Prediction(double delta_t) {
    */
 
   // create augmented states
-  VectorXd x_aug = VectorXd(7);
-  MatrixXd P_aug = MatrixXd::Zero(7, 7);
-  MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+  VectorXd x_aug = VectorXd(n_aug_).setZero();
+  MatrixXd P_aug = MatrixXd(n_aug_, n_aug_).setZero();
+  MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1).setZero();
  
   // create augmented mean state
   x_aug.head(5) = x_;
@@ -276,7 +288,7 @@ void UKF::Update(int n_z, VectorXd& z, MatrixXd& Z_sig, MatrixXd& R, int normali
   } 
 
   // calculate predicted measurement covariance
-  MatrixXd S = MatrixXd::Zero(n_z, n_z);
+  MatrixXd S = MatrixXd(n_z, n_z).setZero();
   S += R;
   for (int i = 0; i < 2 * n_aug_ + 1; i++) { 
     // difference
@@ -290,7 +302,7 @@ void UKF::Update(int n_z, VectorXd& z, MatrixXd& Z_sig, MatrixXd& R, int normali
   }
 
   // compute process-measurement cross-correlation
-  MatrixXd T = MatrixXd::Zero(n_x_, n_z);
+  MatrixXd T = MatrixXd(n_x_, n_z).setZero();
   for (int i = 0; i < 2 * n_aug_ + 1; i++) { 
     // measurement difference
     VectorXd z_diff = Z_sig.col(i) - z_pred;
