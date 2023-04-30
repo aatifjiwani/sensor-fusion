@@ -57,8 +57,8 @@ UKF::UKF() {
    */
   is_initialized_ = false;
 
-  std_a_ = 1;
-  std_yawdd_ = 1;
+  std_a_ = 3;
+  std_yawdd_ = 2;
 
   n_x_ = 5;
   n_aug_ = 7;
@@ -90,8 +90,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       
       P_(0, 0) = std_laspx_ * std_laspx_;
       P_(1, 1) = std_laspy_ * std_laspy_;
-      std::cout << P_ << std::endl;
-      std::cout << x_ << std::endl;
+      // std::cout << P_ << std::endl;
+      // std::cout << x_ << std::endl;
     } else if (meas_package.sensor_type_ == meas_package.RADAR) {
       // distance, heading, distance_dt
 
