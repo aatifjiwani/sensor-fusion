@@ -298,7 +298,8 @@ int main(int argc, const char *argv[])
                     dif_file << abs(ttcCamera - ttcLidar) << " "; 
                     //// EOF STUDENT ASSIGNMENT
 
-                    if (bVis)
+
+                    if (true)
                     {
                         cv::Mat visImg = (dataBuffer.end() - 1)->cameraImg.clone();
                         showLidarImgOverlay(visImg, currBB->lidarPoints, P_rect_00, R_rect_00, RT, &visImg);
