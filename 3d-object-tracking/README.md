@@ -1,6 +1,7 @@
 # 3D Object Tracking
 
 ## Implementation Details
+![](images/results/ezgif-2-c63194d603.gif)
 
 ### Computing Lidar TTC
 #### 1. Matching 2D Bounding Boxes
