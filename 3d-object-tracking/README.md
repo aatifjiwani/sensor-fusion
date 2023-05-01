@@ -13,7 +13,7 @@ Assume we have keypoints and their descriptions for every pair of sequential fra
 Assume we have appropriately projected all Lidar points onto the camera image using the given extrinsic and intrinsic matrices. 
 
 For the matched bounding boxes in the current and previous frame, we capture the Lidar points that are contains within each. Conceptually, we should then calculate the minimum `x` point in both Lidar point clouds and compute the TTC using 
-$$ TTC = \frac{min_{curr}*\Delta t}{min_{prev} - min_{curr}}$$
+$$TTC = \frac{min_{curr}*\Delta t}{min_{prev} - min_{curr}}$$
 
 However, these Lidar point clouds can contain outliers. Since most `x` points for each bounding box lie on the bumper, we select $min_{frame}$ to be the median point on the $x$-axis. 
 
@@ -28,7 +28,7 @@ Conceptually, computing the TTC is based on the size of the obstacle's bounding 
 
 For every pair of keypoints in the bounding box in the previous frame, compute the distance between them. Then, we find the distance between every corresponding pair of keypoints in the current frame using the keypoint matches. Finally, we compute the ratio of distances between every pair of keypoint matches. 
 
-The TTC is calculated using the median distance ratio: $$ TTC = \frac{-\Delta t}{1 - ratio}$$
+The TTC is calculated using the median distance ratio: $$TTC = \frac{-\Delta t}{1 - ratio}$$
 
 ### Performance Evaluation
 #### Some Examples where Lidar TTC seems off
